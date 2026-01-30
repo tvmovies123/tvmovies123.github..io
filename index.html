@@ -1,122 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>tdbnz Streaming Hub</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <title>123WatchMovies</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-<header class="main-header">
-  <div class="logo">🎬 123 Watch Movies - tdbnz Streaming Hub</div>
-  <nav class="nav">
-    <button id="navHome">Home</button>
-    <button id="navSearch">Search</button>
-  </nav>
+<header>
+  <div class="nav">
+    <div class="brand">
+      <div class="brand-pill"></div>
+      <span>123WATCHMOVIES</span>
+    </div>
+
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-type="movie">Movies</button>
+      <button class="nav-tab" data-type="tv">TV Shows</button>
+    </div>
+
+    <div class="search-wrap">
+      <input id="searchInput" class="search-input" type="search" placeholder="Search movies & TV..." />
+      <span class="search-icon">🔍</span>
+    </div>
+  </div>
 </header>
 
 <main>
-
-  <!-- HOME PAGE -->
-  <section id="homePage">
-    <section id="hero">
-      <div id="heroBackdrop" class="hero-backdrop">
-        <div class="hero-overlay">
-          <div class="hero-content">
-            <h1 id="heroTitle"></h1>
-            <p id="heroMeta"></p>
-            <p id="heroOverview"></p>
-            <div class="hero-actions">
-              <button id="heroPlayBtn">▶ Play</button>
-              <button id="heroMoreBtn">More Info</button>
-            </div>
-          </div>
-        </div>
+  <div class="page">
+    <div class="section-header">
+      <div>
+        <div class="section-title" id="sectionTitle">Popular Movies</div>
+        <div class="section-sub">Powered by TMDB · Streamed via 123WatchMovies</div>
       </div>
-    </section>
-
-    <section class="rows">
-      <div class="row">
-        <h2>Latest Movies</h2>
-        <div id="rowLatestMovies" class="row-scroll"></div>
-      </div>
-      <div class="row">
-        <h2>Latest TV Shows</h2>
-        <div id="rowLatestTV" class="row-scroll"></div>
-      </div>
-      <div class="row">
-        <h2>Popular Movies</h2>
-        <div id="rowPopularMovies" class="row-scroll"></div>
-      </div>
-      <div class="row">
-        <h2>Popular TV Shows</h2>
-        <div id="rowPopularTV" class="row-scroll"></div>
-      </div>
-      <div class="row">
-        <h2>Top Rated Movies</h2>
-        <div id="rowTopMovies" class="row-scroll"></div>
-      </div>
-      <div class="row">
-        <h2>Top Rated TV Shows</h2>
-        <div id="rowTopTV" class="row-scroll"></div>
-      </div>
-    </section>
-  </section>
-
-  <!-- SEARCH PAGE -->
-  <section id="searchPage" class="page" style="display:none;">
-    <div class="search-bar">
-      <input id="searchInput" type="text" placeholder="Search for a movie or TV show...">
-      <button id="searchBtn">Search</button>
-    </div>
-    <div id="searchResults" class="grid"></div>
-  </section>
-
-  <!-- DETAILS PAGE -->
-  <section id="detailsPage" class="page" style="display:none;">
-    <div id="detailsBackdrop" class="details-backdrop">
-      <div class="details-overlay">
-        <div class="details-content">
-          <h1 id="detailsTitle"></h1>
-          <p id="detailsMeta"></p>
-          <p id="detailsOverview"></p>
-          <p id="detailsCast"></p>
-          <div class="details-actions">
-            <button id="detailsPlayBtn">▶ Play</button>
-            <button id="detailsTrailerBtn">Trailer</button>
-            <button id="detailsBackBtn">← Back</button>
-          </div>
-        </div>
-      </div>
+      <div class="section-sub" id="resultCount"></div>
     </div>
 
-    <section id="tvSeasons" style="display:none;">
-      <h2>Seasons</h2>
-      <div id="seasonButtons" class="season-buttons"></div>
-      <h3>Episodes</h3>
-      <div id="episodeGrid" class="grid"></div>
-    </section>
-
-    <section id="similarSection">
-      <h2>Similar Titles</h2>
-      <div id="similarRow" class="row-scroll"></div>
-    </section>
-  </section>
-
+    <div id="grid" class="grid"></div>
+    <div id="emptyState" class="empty-state" style="display:none;">No results found.</div>
+  </div>
 </main>
 
-<!-- PLAYER MODAL -->
-<div id="playerModal">
-  <span id="closeBtn">✖</span>
-  <iframe id="playerFrame" allowfullscreen></iframe>
+<!-- MODAL -->
+<div id="modalBackdrop" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title-wrap">
+        <div class="modal-title" id="modalTitle"></div>
+        <div class="modal-sub" id="modalSub"></div>
+        <div class="modal-chip-row" id="modalChips"></div>
+      </div>
+      <button class="modal-close" id="modalClose">✕</button>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- PLAYER -->
+      <div class="modal-player">
+        <iframe id="playerFrame" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+      </div>
+
+      <!-- TRAILER -->
+      <div class="trailer-box">
+        <h3>Trailer</h3>
+        <iframe id="trailerFrame" allowfullscreen></iframe>
+      </div>
+
+      <!-- TV SEASONS -->
+      <div id="seasonBox" class="season-box" style="display:none;">
+        <h3>Seasons</h3>
+        <select id="seasonSelect"></select>
+
+        <div id="episodeList" class="episode-list"></div>
+      </div>
+
+      <div class="modal-overview" id="modalOverview"></div>
+    </div>
+  </div>
 </div>
 
-<!-- TRAILER MODAL -->
-<div id="trailerModal">
-  <span id="closeTrailerBtn">✖</span>
-  <iframe id="trailerFrame" allowfullscreen></iframe>
-</div>
+<footer>
+  <div>Data from TMDB. Streams via <span>123WatchMovies.xyz</span></div>
+</footer>
 
-<script src="script.js"></script>
+<script src="app.js"></script>
 </body>
-</html
+</html>
