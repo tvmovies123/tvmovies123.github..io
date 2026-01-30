@@ -7,12 +7,11 @@ const BRAND_COLOR = "e50914";
 
 // STATE
 let heroItem = null;
-let currentType = "home"; // home | movie | tv (for search filter)
+let currentType = "home"; 
 let currentSearchResults = [];
 let currentSelected = null;
 
 // ELEMENTS
-const heroEl = document.getElementById("hero");
 const heroBg = document.getElementById("heroBg");
 const heroTitle = document.getElementById("heroTitle");
 const heroMeta = document.getElementById("heroMeta");
@@ -62,11 +61,13 @@ async function loadHero() {
   const data = await fetchJson("/movie/now_playing?page=1");
   const item = data.results?.[0];
   if (!item) return;
+
   heroItem = { ...item, media_type: "movie" };
 
   heroBg.style.backgroundImage = item.backdrop_path
     ? `url(${IMAGE_BASE + item.backdrop_path})`
     : "none";
+
   heroTitle.textContent = item.title;
   const year = item.release_date?.slice(0, 4) || "";
   const rating = item.vote_average ? item.vote_average.toFixed(1) : "–";
@@ -74,9 +75,7 @@ async function loadHero() {
   heroOverview.textContent = item.overview || "";
 
   heroPlay.onclick = () => openModal(heroItem, "movie");
-  heroTrailer.onclick = () => {
-    openModal(heroItem, "movie", { autoOpenTrailer: true });
-  };
+  heroTrailer.onclick = () => openModal(heroItem, "movie", { autoOpenTrailer: true });
 }
 
 // CAROUSEL RENDER
@@ -87,16 +86,16 @@ function renderCarousel(container, items, type) {
     card.className = "card";
     const title = type === "movie" ? item.title : item.name;
     const poster = item.poster_path ? POSTER_BASE + item.poster_path : "";
+
     card.innerHTML = `
       <div class="card-img-wrap">
-        <img class="card-img" src="${poster}" alt="${escapeHtml(
-      title
-    )}" loading="lazy" />
+        <img class="card-img" src="${poster}" alt="${escapeHtml(title)}" loading="lazy" />
       </div>
       <div class="card-body">
         <div class="card-title">${escapeHtml(title)}</div>
       </div>
     `;
+
     card.onclick = () => openModal(item, type);
     container.appendChild(card);
   });
@@ -119,9 +118,6 @@ async function loadCarousels() {
 async function searchAll(query) {
   if (!query.trim()) {
     searchSection.style.display = "none";
-    searchGrid.innerHTML = "";
-    searchEmpty.style.display = "none";
-    searchCount.textContent = "";
     return;
   }
 
@@ -131,6 +127,7 @@ async function searchAll(query) {
   ]);
 
   let results = [];
+
   if (currentType === "movie") {
     results = movies.results.map((r) => ({ ...r, media_type: "movie" }));
   } else if (currentType === "tv") {
@@ -152,8 +149,8 @@ function renderSearchResults(query) {
 
   if (!currentSearchResults.length) {
     searchEmpty.style.display = "block";
-    searchCount.textContent = "0 results";
     searchTitle.textContent = `No results for "${query}"`;
+    searchCount.textContent = "0 results";
     return;
   }
 
@@ -165,18 +162,19 @@ function renderSearchResults(query) {
     const type = item.media_type;
     const title = type === "movie" ? item.title : item.name;
     const poster = item.poster_path ? POSTER_BASE + item.poster_path : "";
+
     const card = document.createElement("article");
     card.className = "card";
+
     card.innerHTML = `
       <div class="card-img-wrap">
-        <img class="card-img" src="${poster}" alt="${escapeHtml(
-      title
-    )}" loading="lazy" />
+        <img class="card-img" src="${poster}" alt="${escapeHtml(title)}" loading="lazy" />
       </div>
       <div class="card-body">
         <div class="card-title">${escapeHtml(title)}</div>
       </div>
     `;
+
     card.onclick = () => openModal(item, type);
     searchGrid.appendChild(card);
   });
@@ -204,11 +202,7 @@ async function openModal(item, type, options = {}) {
 
   if (type === "movie" && details.runtime) {
     modalRuntime.textContent = `Runtime: ${details.runtime} min`;
-  } else if (
-    type === "tv" &&
-    details.episode_run_time &&
-    details.episode_run_time.length
-  ) {
+  } else if (type === "tv" && details.episode_run_time?.length) {
     modalRuntime.textContent = `Episode runtime: ${details.episode_run_time[0]} min`;
   } else {
     modalRuntime.textContent = "";
@@ -216,10 +210,11 @@ async function openModal(item, type, options = {}) {
 
   modalChips.innerHTML = "";
   const chips = [];
-  if (rating && rating !== "–") chips.push("★ " + rating + " / 10");
+  if (rating !== "–") chips.push(`★ ${rating} / 10`);
   if (details.original_language)
-    chips.push("Language: " + details.original_language.toUpperCase());
-  if (details.vote_count) chips.push(details.vote_count + " votes");
+    chips.push(details.original_language.toUpperCase());
+  if (details.vote_count) chips.push(`${details.vote_count} votes`);
+
   chips.forEach((c) => {
     const span = document.createElement("span");
     span.className = "modal-chip";
@@ -227,7 +222,6 @@ async function openModal(item, type, options = {}) {
     modalChips.appendChild(span);
   });
 
-  // default player
   if (type === "movie") {
     playerFrame.src = buildMovieEmbed(id, { autoPlay: true });
     seasonBox.style.display = "none";
@@ -264,7 +258,6 @@ function buildMovieEmbed(id, opts = {}) {
   const params = new URLSearchParams();
   params.set("color", BRAND_COLOR);
   if (opts.autoPlay) params.set("autoPlay", "true");
-  if (opts.progress != null) params.set("progress", String(opts.progress));
   return `${EMBED_BASE}/embed/movie/${id}?${params.toString()}`;
 }
 
@@ -274,7 +267,6 @@ function buildTvEmbed(id, season, episode, opts = {}) {
   params.set("nextEpisode", "true");
   params.set("episodeSelector", "true");
   if (opts.autoPlay) params.set("autoPlay", "true");
-  if (opts.progress != null) params.set("progress", String(opts.progress));
   return `${EMBED_BASE}/embed/tv/${id}/${season}/${episode}?${params.toString()}`;
 }
 
@@ -285,6 +277,7 @@ async function loadTrailer(id, type) {
     const trailer = data.results.find(
       (v) => v.type === "Trailer" && v.site === "YouTube"
     );
+
     if (trailer) {
       trailerFrame.src = `https://www.youtube.com/embed/${trailer.key}`;
       trailerBox.style.display = "block";
@@ -301,7 +294,7 @@ async function loadTrailer(id, type) {
 // Seasons / episodes
 async function loadSeasons(id) {
   const data = await fetchJson(`/tv/${id}`);
-  if (!data.seasons || !data.seasons.length) {
+  if (!data.seasons?.length) {
     seasonBox.style.display = "none";
     return;
   }
@@ -325,10 +318,11 @@ async function loadEpisodes(id, season) {
   const data = await fetchJson(`/tv/${id}/season/${season}`);
   episodeList.innerHTML = "";
 
-  (data.episodes || []).forEach((ep) => {
+  data.episodes?.forEach((ep) => {
     const div = document.createElement("div");
     div.className = "episode-item";
     div.textContent = `E${ep.episode_number} — ${ep.name}`;
+
     div.onclick = () => {
       playerFrame.src = buildTvEmbed(id, season, ep.episode_number, {
         autoPlay: true,
@@ -337,6 +331,7 @@ async function loadEpisodes(id, season) {
         modalRuntime.textContent = `Episode runtime: ${ep.runtime} min`;
       }
     };
+
     episodeList.appendChild(div);
   });
 }
@@ -359,14 +354,13 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-// Tabs (home/movie/tv affects search filter only)
+// Tabs
 document.querySelectorAll(".nav-tab").forEach((btn) => {
   btn.addEventListener("click", () => {
-    document
-      .querySelectorAll(".nav-tab")
-      .forEach((b) => b.classList.remove("active"));
+    document.querySelectorAll(".nav-tab").forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     currentType = btn.getAttribute("data-type");
+
     if (!searchInput.value.trim()) {
       searchSection.style.display = "none";
     } else {
@@ -380,16 +374,14 @@ let searchTimeout = null;
 searchInput.addEventListener("input", (e) => {
   const value = e.target.value;
   clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => {
-    searchAll(value);
-  }, 350);
+  searchTimeout = setTimeout(() => searchAll(value), 350);
 });
 
-// Continue watching (basic skeleton using postMessage)
+// Continue Watching (Vidking postMessage)
 window.addEventListener("message", (event) => {
   try {
     const data = JSON.parse(event.data);
-    if (data && data.type === "PLAYER_EVENT") {
+    if (data?.type === "PLAYER_EVENT") {
       const d = data.data;
       const key = `cw:${d.mediaType}:${d.id}`;
       localStorage.setItem(
@@ -406,9 +398,7 @@ window.addEventListener("message", (event) => {
       );
       renderContinueWatching();
     }
-  } catch {
-    // ignore
-  }
+  } catch {}
 });
 
 async function renderContinueWatching() {
@@ -425,24 +415,23 @@ async function renderContinueWatching() {
     const item = JSON.parse(localStorage.getItem(key));
     const type = item.mediaType;
     const id = item.id;
+
     const details = await fetchJson(`/${type}/${id}`);
     const title = type === "movie" ? details.title : details.name;
-    const poster = details.poster_path
-      ? POSTER_BASE + details.poster_path
-      : "";
+    const poster = details.poster_path ? POSTER_BASE + details.poster_path : "";
 
     const card = document.createElement("article");
     card.className = "card";
+
     card.innerHTML = `
       <div class="card-img-wrap">
-        <img class="card-img" src="${poster}" alt="${escapeHtml(
-      title
-    )}" loading="lazy" />
+        <img class="card-img" src="${poster}" alt="${escapeHtml(title)}" loading="lazy" />
       </div>
       <div class="card-body">
         <div class="card-title">${escapeHtml(title)}</div>
       </div>
     `;
+
     card.onclick = () => openModal(details, type);
     continueCarousel.appendChild(card);
   }

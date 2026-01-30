@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+
 <header>
   <div class="nav">
     <div class="brand">
@@ -105,31 +106,26 @@
     </div>
 
     <div class="modal-body">
-      <!-- PLAYER -->
       <div class="modal-player">
         <iframe id="playerFrame" allowfullscreen allow="autoplay; encrypted-media"></iframe>
       </div>
 
-      <!-- ACTIONS -->
       <div class="modal-actions">
         <button id="btnPlay" class="btn btn-primary">▶ Play</button>
         <button id="btnTrailer" class="btn btn-ghost">🎬 Trailer</button>
       </div>
 
-      <!-- INFO -->
       <div class="modal-info">
         <p id="modalRuntime" class="modal-runtime"></p>
         <p id="modalOverview" class="modal-overview"></p>
       </div>
 
-      <!-- TV SEASONS / EPISODES -->
       <div id="seasonBox" class="season-box" style="display:none;">
         <h3>Seasons</h3>
         <select id="seasonSelect"></select>
         <div id="episodeList" class="episode-list"></div>
       </div>
 
-      <!-- TRAILER -->
       <div id="trailerBox" class="trailer-box" style="display:none;">
         <h3>Trailer</h3>
         <iframe id="trailerFrame" allowfullscreen></iframe>
