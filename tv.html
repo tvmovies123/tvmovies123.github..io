@@ -6,46 +6,55 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <div class="page">
-    <header class="site-header">
+
+<body data-page="tv">
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="nav-left">
       <div class="logo">123WatchMovies</div>
-      <nav class="nav">
+      <nav class="nav-links">
         <a href="index.html">Home</a>
         <a href="movies.html">Movies</a>
         <a href="tv.html" class="active">TV Shows</a>
         <a href="faq.html">FAQ</a>
         <a href="legal.html">Disclaimer</a>
       </nav>
-    </header>
+    </div>
+    <div class="mobile-menu">☰</div>
+  </header>
 
-    <main>
-      <section class="section">
-        <h1>TV Shows</h1>
-        <div class="search-bar">
-          <input id="tvSearchInput" type="text" placeholder="Search TV shows...">
-          <button id="tvSearchButton" class="btn secondary">Search</button>
-        </div>
-        <div id="tvGrid" class="card-row"></div>
-      </section>
-    </main>
+  <!-- PAGE HEADER -->
+  <section class="row" style="margin-top: 7rem;">
+    <h1 style="font-size: 2rem; margin-bottom: 1rem;">TV Shows</h1>
 
-    <footer class="site-footer">
-      <p>123watchmovies.xyz does not host any media files. All streams are from third‑party providers.</p>
-    </footer>
-  </div>
+    <div style="display:flex; gap:1rem; margin-bottom:1rem;">
+      <input id="tvSearchInput" 
+             type="text" 
+             placeholder="Search TV shows..." 
+             style="flex:1; padding:0.8rem; border-radius:4px; border:none; background:#111; color:#fff;">
+      <button id="tvSearchButton" class="btn btn-info">Search</button>
+    </div>
 
-  <div id="playerModal" class="player-modal">
-    <div class="player-backdrop" id="playerBackdrop"></div>
-    <div class="player-content">
-      <button class="player-close" id="playerClose">&times;</button>
+    <div id="tvSearchResults" class="row-cards" style="margin-bottom:2rem;"></div>
+  </section>
+
+  <!-- TV ROWS -->
+  <main id="tvRows"></main>
+
+  <!-- FOOTER -->
+  <footer>
+    123watchmovies.xyz does not host any media files. All streams are from third‑party providers.
+  </footer>
+
+  <!-- PLAYER MODAL -->
+  <div class="player-modal">
+    <div class="player-close">&times;</div>
+    <div class="player-box">
       <iframe id="playerFrame" src="" allowfullscreen></iframe>
     </div>
   </div>
 
   <script src="script.js"></script>
-  <script>
-    initTvPage();
-  </script>
 </body>
 </html>

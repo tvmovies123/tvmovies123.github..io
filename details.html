@@ -6,68 +6,55 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <div class="page">
-    <header class="site-header">
+
+<body data-page="details">
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="nav-left">
       <div class="logo">123WatchMovies</div>
-      <nav class="nav">
+      <nav class="nav-links">
         <a href="index.html">Home</a>
         <a href="movies.html">Movies</a>
         <a href="tv.html">TV Shows</a>
         <a href="faq.html">FAQ</a>
         <a href="legal.html">Disclaimer</a>
       </nav>
-    </header>
+    </div>
+    <div class="mobile-menu">☰</div>
+  </header>
 
-    <main>
-      <section class="details-layout">
-        <div class="details-poster">
-          <img id="detailsPoster" src="" alt="Poster">
-        </div>
+  <!-- DETAILS HERO -->
+  <section class="details-hero"></section>
 
-        <div class="details-info">
-          <h1 id="detailsTitle">Loading...</h1>
+  <!-- DETAILS CONTENT -->
+  <section class="details-content">
+    <h1 class="details-title">Loading...</h1>
+    <p class="details-meta"></p>
+    <p class="details-overview"></p>
 
-          <div class="meta-row">
-            <span id="detailsYear" class="tag">Year</span>
-            <span id="detailsRuntime" class="tag">Runtime</span>
-            <span id="detailsRating" class="tag">⭐ Rating</span>
-            <span id="detailsType" class="tag">Type</span>
-          </div>
+    <div class="hero-buttons" style="margin-bottom:2rem;">
+      <button class="btn btn-play">Play</button>
+      <button class="btn btn-info">TMDB Page</button>
+    </div>
 
-          <p id="detailsOverview" class="overview">
-            Loading overview...
-          </p>
+    <!-- EPISODES (TV ONLY) -->
+    <div id="episodes"></div>
+  </section>
 
-          <div class="actions">
-            <button class="btn primary" id="playButton">Play</button>
-            <button class="btn secondary" id="downloadButton" style="display:none;">Download</button>
-          </div>
-        </div>
-      </section>
+  <!-- FOOTER -->
+  <footer>
+    123watchmovies.xyz does not host any media files. All streams are from third‑party providers.
+  </footer>
 
-      <section class="episodes-section" id="episodesSection" style="display:none;">
-        <h2>Episodes</h2>
-        <div id="episodesGrid" class="episodes-grid"></div>
-      </section>
-    </main>
-
-    <footer class="site-footer">
-      <p>123watchmovies.xyz does not host any media files. All streams are from third‑party providers.</p>
-    </footer>
-  </div>
-
-  <div id="playerModal" class="player-modal">
-    <div class="player-backdrop" id="playerBackdrop"></div>
-    <div class="player-content">
-      <button class="player-close" id="playerClose">&times;</button>
+  <!-- PLAYER MODAL -->
+  <div class="player-modal">
+    <div class="player-close">&times;</div>
+    <div class="player-box">
       <iframe id="playerFrame" src="" allowfullscreen></iframe>
     </div>
   </div>
 
   <script src="script.js"></script>
-  <script>
-    initDetailsPage();
-  </script>
 </body>
 </html>

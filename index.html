@@ -2,62 +2,57 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>123WatchMovies – Home</title>
+  <title>123WatchMovies – Watch Movies & TV Online</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <div class="page">
-    <header class="site-header">
+
+<body data-page="home">
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="nav-left">
       <div class="logo">123WatchMovies</div>
-      <nav class="nav">
+      <nav class="nav-links">
         <a href="index.html" class="active">Home</a>
         <a href="movies.html">Movies</a>
         <a href="tv.html">TV Shows</a>
         <a href="faq.html">FAQ</a>
         <a href="legal.html">Disclaimer</a>
       </nav>
-    </header>
+    </div>
+    <div class="mobile-menu">☰</div>
+  </header>
 
-    <main>
-      <section class="hero">
-        <div class="hero-content">
-          <h1>Stream Movies & TV Instantly</h1>
-          <p>Discover trending movies and TV shows powered by TMDB and multiple streaming sources.</p>
-          <div class="hero-actions">
-            <a href="movies.html" class="btn primary">Browse Movies</a>
-            <a href="tv.html" class="btn secondary">Browse TV Shows</a>
-          </div>
-        </div>
-      </section>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1 class="hero-title">Loading...</h1>
+      <p class="hero-overview">Please wait...</p>
 
-      <section class="section">
-        <h2>Trending Movies</h2>
-        <div id="trendingMovies" class="card-row"></div>
-      </section>
+      <div class="hero-buttons">
+        <button class="btn btn-play">Play</button>
+        <button class="btn btn-info">More Info</button>
+      </div>
+    </div>
+  </section>
 
-      <section class="section">
-        <h2>Trending TV Shows</h2>
-        <div id="trendingTv" class="card-row"></div>
-      </section>
-    </main>
+  <!-- ROWS -->
+  <main id="homeRows"></main>
 
-    <footer class="site-footer">
-      <p>123watchmovies.xyz does not host any media files. All streams are from third‑party providers.</p>
-    </footer>
-  </div>
+  <!-- FOOTER -->
+  <footer>
+    123watchmovies.xyz does not host any media files. All streams are from third‑party providers.
+  </footer>
 
-  <div id="playerModal" class="player-modal">
-    <div class="player-backdrop" id="playerBackdrop"></div>
-    <div class="player-content">
-      <button class="player-close" id="playerClose">&times;</button>
+  <!-- PLAYER MODAL -->
+  <div class="player-modal">
+    <div class="player-close">&times;</div>
+    <div class="player-box">
       <iframe id="playerFrame" src="" allowfullscreen></iframe>
     </div>
   </div>
 
   <script src="script.js"></script>
-  <script>
-    initHomePage();
-  </script>
 </body>
 </html>

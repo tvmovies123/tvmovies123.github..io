@@ -5,51 +5,126 @@
   <title>123WatchMovies – FAQ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="style.css">
+
+  <style>
+    .faq-container {
+      max-width: 800px;
+      margin: 8rem auto 4rem;
+      padding: 0 1.5rem;
+    }
+
+    .faq-item {
+      background: #111;
+      padding: 1.2rem 1.5rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .faq-item:hover {
+      background: #181818;
+    }
+
+    .faq-question {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .faq-answer {
+      margin-top: 0.8rem;
+      font-size: 1rem;
+      line-height: 1.6;
+      display: none;
+      opacity: 0.85;
+    }
+  </style>
 </head>
-<body>
-  <div class="page">
-    <header class="site-header">
+
+<body data-page="faq">
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="nav-left">
       <div class="logo">123WatchMovies</div>
-      <nav class="nav">
+      <nav class="nav-links">
         <a href="index.html">Home</a>
         <a href="movies.html">Movies</a>
         <a href="tv.html">TV Shows</a>
         <a href="faq.html" class="active">FAQ</a>
         <a href="legal.html">Disclaimer</a>
       </nav>
-    </header>
+    </div>
+    <div class="mobile-menu">☰</div>
+  </header>
 
-    <main>
-      <section class="legal-section">
-        <h1>Frequently Asked Questions</h1>
+  <!-- FAQ CONTENT -->
+  <div class="faq-container">
+    <h1 style="margin-bottom:1.5rem;">Frequently Asked Questions</h1>
 
-        <div class="faq-item">
-          <h3>Do you host any of the videos on this site?</h3>
-          <p>No. 123watchmovies.xyz does not host any video files on its servers. All streams are from third‑party providers.</p>
-        </div>
+    <div class="faq-item">
+      <div class="faq-question">Is 123WatchMovies free to use?</div>
+      <div class="faq-answer">
+        Yes. 123WatchMovies is completely free. No sign‑up, no subscriptions, no hidden fees.
+      </div>
+    </div>
 
-        <div class="faq-item">
-          <h3>Where do the streams come from?</h3>
-          <p>All movies and TV shows are embedded from external providers using publicly available APIs and iframes. We simply index and display links.</p>
-        </div>
+    <div class="faq-item">
+      <div class="faq-question">Do you host any movies or TV shows?</div>
+      <div class="faq-answer">
+        No. We do not host or store any media files. All streams come from third‑party providers.
+      </div>
+    </div>
 
-        <div class="faq-item">
-          <h3>Is 123watchmovies.xyz affiliated with any content owners?</h3>
-          <p>No. We are not affiliated with or endorsed by any studios, rights holders, or streaming platforms. All trademarks belong to their respective owners.</p>
-        </div>
+    <div class="faq-item">
+      <div class="faq-question">Why does a stream sometimes fail?</div>
+      <div class="faq-answer">
+        Streams are provided by external sources. If one fails, try again — the player will automatically switch to a fallback source.
+      </div>
+    </div>
 
-        <div class="faq-item">
-          <h3>How should I use this site?</h3>
-          <p>This site is intended for informational and indexing purposes only. You are responsible for complying with your local laws and regulations when accessing any third‑party content.</p>
-        </div>
-      </section>
-    </main>
+    <div class="faq-item">
+      <div class="faq-question">Why are some titles missing?</div>
+      <div class="faq-answer">
+        We rely on public APIs and third‑party providers. If a title isn’t available, it may not be supported by the provider at the moment.
+      </div>
+    </div>
 
-    <footer class="site-footer">
-      <p>123watchmovies.xyz does not host any media files. All streams are from third‑party providers.</p>
-    </footer>
+    <div class="faq-item">
+      <div class="faq-question">Is this legal?</div>
+      <div class="faq-answer">
+        We do not host or upload any content. We simply index publicly available third‑party streams.  
+        For more information, see the Disclaimer page.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    123watchmovies.xyz does not host any media files. All streams are from third‑party providers.
+  </footer>
+
+  <!-- PLAYER MODAL -->
+  <div class="player-modal">
+    <div class="player-close">&times;</div>
+    <div class="player-box">
+      <iframe id="playerFrame" src="" allowfullscreen></iframe>
+    </div>
   </div>
 
   <script src="script.js"></script>
+
+  <script>
+    // FAQ toggle logic
+    document.querySelectorAll(".faq-item").forEach(item => {
+      item.addEventListener("click", () => {
+        const answer = item.querySelector(".faq-answer");
+        const isOpen = answer.style.display === "block";
+        answer.style.display = isOpen ? "none" : "block";
+      });
+    });
+  </script>
+
 </body>
 </html>
