@@ -1,4 +1,3 @@
-@ -0,0 +1,347 @@
 const API = "https://ancient-lab-55d7.thomasnz.workers.dev";
 const IMG = "https://image.tmdb.org/t/p/w500";
 const BACKDROP = "https://image.tmdb.org/t/p/original";
