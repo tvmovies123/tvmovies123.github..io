@@ -6,10 +6,9 @@ const EMBED_BASE = "https://www.vidking.net";
 const BRAND_COLOR = "e50914";
 
 // STATE
-let heroItem = null;
-let currentType = "home"; 
-let currentSearchResults = [];
 let currentSelected = null;
+let currentType = "home";
+let currentSearchResults = [];
 
 // ELEMENTS
 const heroBg = document.getElementById("heroBg");
@@ -23,9 +22,6 @@ const trendingMoviesEl = document.getElementById("trendingMovies");
 const trendingTvEl = document.getElementById("trendingTv");
 const topRatedEl = document.getElementById("topRated");
 
-const continueSection = document.getElementById("continueSection");
-const continueCarousel = document.getElementById("continueCarousel");
-
 const searchSection = document.getElementById("searchSection");
 const searchGrid = document.getElementById("searchGrid");
 const searchEmpty = document.getElementById("searchEmpty");
@@ -33,21 +29,25 @@ const searchTitle = document.getElementById("searchTitle");
 const searchCount = document.getElementById("searchCount");
 const searchInput = document.getElementById("searchInput");
 
-const modalBackdrop = document.getElementById("modalBackdrop");
-const modalTitle = document.getElementById("modalTitle");
-const modalSub = document.getElementById("modalSub");
-const modalChips = document.getElementById("modalChips");
-const modalOverview = document.getElementById("modalOverview");
-const modalRuntime = document.getElementById("modalRuntime");
-const playerFrame = document.getElementById("playerFrame");
-const modalClose = document.getElementById("modalClose");
-const btnPlay = document.getElementById("btnPlay");
-const btnTrailer = document.getElementById("btnTrailer");
+// INFO MODAL
+const infoModalBackdrop = document.getElementById("infoModalBackdrop");
+const infoPoster = document.getElementById("infoPoster");
+const infoTitle = document.getElementById("infoTitle");
+const infoMeta = document.getElementById("infoMeta");
+const infoChips = document.getElementById("infoChips");
+const infoOverview = document.getElementById("infoOverview");
+const infoRuntime = document.getElementById("infoRuntime");
+const infoClose = document.getElementById("infoClose");
+const openPlayer = document.getElementById("openPlayer");
+const openTrailer = document.getElementById("openTrailer");
 const seasonBox = document.getElementById("seasonBox");
 const seasonSelect = document.getElementById("seasonSelect");
 const episodeList = document.getElementById("episodeList");
-const trailerBox = document.getElementById("trailerBox");
-const trailerFrame = document.getElementById("trailerFrame");
+
+// PLAYER MODAL
+const playerModalBackdrop = document.getElementById("playerModalBackdrop");
+const playerFrame = document.getElementById("playerFrame");
+const playerClose = document.getElementById("playerClose");
 
 // API helper
 async function fetchJson(path) {
@@ -56,26 +56,41 @@ async function fetchJson(path) {
   return res.json();
 }
 
-// HERO
+// RANDOM HERO (from many endpoints)
 async function loadHero() {
-  const data = await fetchJson("/movie/now_playing?page=1");
-  const item = data.results?.[0];
-  if (!item) return;
+  const endpoints = [
+    "/trending/movie/week",
+    "/trending/tv/week",
+    "/movie/now_playing",
+    "/movie/popular",
+    "/tv/popular",
+    "/movie/top_rated",
+    "/tv/top_rated"
+  ];
 
-  heroItem = { ...item, media_type: "movie" };
+  const randomEndpoint = endpoints[Math.floor(Math.random() * endpoints.length)];
+  const data = await fetchJson(randomEndpoint);
+
+  const items = data.results || [];
+  if (!items.length) return;
+
+  const item = items[Math.floor(Math.random() * items.length)];
+  const type = item.title ? "movie" : "tv";
 
   heroBg.style.backgroundImage = item.backdrop_path
     ? `url(${IMAGE_BASE + item.backdrop_path})`
     : "none";
 
-  heroTitle.textContent = item.title;
-  const year = item.release_date?.slice(0, 4) || "";
-  const rating = item.vote_average ? item.vote_average.toFixed(1) : "–";
-  heroMeta.textContent = [year, `★ ${rating}`].filter(Boolean).join(" • ");
+  const title = type === "movie" ? item.title : item.name;
+  const year = (type === "movie" ? item.release_date : item.first_air_date)?.slice(0, 4) || "";
+  const rating = item.vote_average?.toFixed(1) || "–";
+
+  heroTitle.textContent = title;
+  heroMeta.textContent = `${year} • ★ ${rating}`;
   heroOverview.textContent = item.overview || "";
 
-  heroPlay.onclick = () => openModal(heroItem, "movie");
-  heroTrailer.onclick = () => openModal(heroItem, "movie", { autoOpenTrailer: true });
+  heroPlay.onclick = () => openInfoModal(item, type);
+  heroTrailer.onclick = () => openInfoModal(item, type);
 }
 
 // CAROUSEL RENDER
@@ -89,14 +104,14 @@ function renderCarousel(container, items, type) {
 
     card.innerHTML = `
       <div class="card-img-wrap">
-        <img class="card-img" src="${poster}" alt="${escapeHtml(title)}" loading="lazy" />
+        <img class="card-img" src="${poster}" alt="${title}" loading="lazy" />
       </div>
       <div class="card-body">
-        <div class="card-title">${escapeHtml(title)}</div>
+        <div class="card-title">${title}</div>
       </div>
     `;
 
-    card.onclick = () => openModal(item, type);
+    card.onclick = () => openInfoModal(item, type);
     container.appendChild(card);
   });
 }
@@ -109,9 +124,9 @@ async function loadCarousels() {
     fetchJson("/movie/top_rated?page=1"),
   ]);
 
-  renderCarousel(trendingMoviesEl, trendingMovies.results || [], "movie");
-  renderCarousel(trendingTvEl, trendingTv.results || [], "tv");
-  renderCarousel(topRatedEl, topRated.results || [], "movie");
+  renderCarousel(trendingMoviesEl, trendingMovies.results, "movie");
+  renderCarousel(trendingTvEl, trendingTv.results, "tv");
+  renderCarousel(topRatedEl, topRated.results, "movie");
 }
 
 // SEARCH
@@ -122,8 +137,8 @@ async function searchAll(query) {
   }
 
   const [movies, tv] = await Promise.all([
-    fetchJson(`/search/movie?query=${encodeURIComponent(query)}&include_adult=false`),
-    fetchJson(`/search/tv?query=${encodeURIComponent(query)}&include_adult=false`),
+    fetchJson(`/search/movie?query=${encodeURIComponent(query)}`),
+    fetchJson(`/search/tv?query=${encodeURIComponent(query)}`),
   ]);
 
   let results = [];
@@ -168,138 +183,126 @@ function renderSearchResults(query) {
 
     card.innerHTML = `
       <div class="card-img-wrap">
-        <img class="card-img" src="${poster}" alt="${escapeHtml(title)}" loading="lazy" />
+        <img class="card-img" src="${poster}" alt="${title}" loading="lazy" />
       </div>
       <div class="card-body">
-        <div class="card-title">${escapeHtml(title)}</div>
+        <div class="card-title">${title}</div>
       </div>
     `;
 
-    card.onclick = () => openModal(item, type);
+    card.onclick = () => openInfoModal(item, type);
     searchGrid.appendChild(card);
   });
 }
 
-// MODAL
-async function openModal(item, type, options = {}) {
+// INFO MODAL (FIRST POPUP)
+async function openInfoModal(item, type) {
   currentSelected = { ...item, media_type: type };
   const id = item.id;
 
   const details = await fetchJson(`/${type}/${id}`);
 
   const title = type === "movie" ? details.title : details.name;
-  const year = (type === "movie"
-    ? details.release_date
-    : details.first_air_date || ""
-  )?.slice(0, 4) || "";
+  const year = (type === "movie" ? details.release_date : details.first_air_date)?.slice(0, 4) || "";
   const rating = details.vote_average ? details.vote_average.toFixed(1) : "–";
 
-  modalTitle.textContent = title;
-  modalSub.textContent = [type === "movie" ? "Movie" : "TV Show", year]
-    .filter(Boolean)
-    .join(" • ");
-  modalOverview.textContent = details.overview || "No overview available.";
+  infoTitle.textContent = title;
+  infoMeta.textContent = `${type === "movie" ? "Movie" : "TV Show"} • ${year}`;
+  infoOverview.textContent = details.overview || "No overview available.";
 
   if (type === "movie" && details.runtime) {
-    modalRuntime.textContent = `Runtime: ${details.runtime} min`;
+    infoRuntime.textContent = `Runtime: ${details.runtime} min`;
   } else if (type === "tv" && details.episode_run_time?.length) {
-    modalRuntime.textContent = `Episode runtime: ${details.episode_run_time[0]} min`;
+    infoRuntime.textContent = `Episode runtime: ${details.episode_run_time[0]} min`;
   } else {
-    modalRuntime.textContent = "";
+    infoRuntime.textContent = "";
   }
 
-  modalChips.innerHTML = "";
+  infoPoster.src = details.poster_path ? POSTER_BASE + details.poster_path : "";
+
+  infoChips.innerHTML = "";
   const chips = [];
   if (rating !== "–") chips.push(`★ ${rating} / 10`);
-  if (details.original_language)
-    chips.push(details.original_language.toUpperCase());
+  if (details.original_language) chips.push(details.original_language.toUpperCase());
   if (details.vote_count) chips.push(`${details.vote_count} votes`);
 
   chips.forEach((c) => {
     const span = document.createElement("span");
-    span.className = "modal-chip";
+    span.className = "info-chip";
     span.textContent = c;
-    modalChips.appendChild(span);
+    infoChips.appendChild(span);
   });
 
-  if (type === "movie") {
-    playerFrame.src = buildMovieEmbed(id, { autoPlay: true });
-    seasonBox.style.display = "none";
-  } else {
-    playerFrame.src = buildTvEmbed(id, 1, 1, { autoPlay: true });
+  if (type === "tv") {
+    seasonBox.style.display = "block";
     await loadSeasons(id);
+  } else {
+    seasonBox.style.display = "none";
   }
 
-  btnPlay.onclick = () => {
-    if (type === "movie") {
-      playerFrame.src = buildMovieEmbed(id, { autoPlay: true });
-    } else {
-      const season = seasonSelect.value || 1;
-      playerFrame.src = buildTvEmbed(id, season, 1, { autoPlay: true });
-    }
+  infoModalBackdrop.classList.add("open");
+
+  // PLAY BUTTON → VidKing full player
+  openPlayer.onclick = () => {
+    const url =
+      type === "movie"
+        ? buildMovieEmbed(id)
+        : buildTvEmbed(id, seasonSelect.value || 1, 1);
+
+    openPlayerModal(url);
   };
 
-  btnTrailer.onclick = () => {
-    loadTrailer(id, type);
-    trailerBox.scrollIntoView({ behavior: "smooth" });
+  // TRAILER BUTTON → VidSrc.to trailer only
+  openTrailer.onclick = () => {
+    const url = `https://vidsrc.to/embed/trailer/${id}`;
+    openPlayerModal(url);
   };
-
-  trailerFrame.src = "";
-  trailerBox.style.display = "none";
-
-  modalBackdrop.classList.add("open");
-
-  if (options.autoOpenTrailer) {
-    loadTrailer(id, type);
-  }
 }
 
-function buildMovieEmbed(id, opts = {}) {
+// VIDKING EMBEDS
+function buildMovieEmbed(id) {
   const params = new URLSearchParams();
   params.set("color", BRAND_COLOR);
-  if (opts.autoPlay) params.set("autoPlay", "true");
+  params.set("autoPlay", "true");
   return `${EMBED_BASE}/embed/movie/${id}?${params.toString()}`;
 }
 
-function buildTvEmbed(id, season, episode, opts = {}) {
+function buildTvEmbed(id, season, episode) {
   const params = new URLSearchParams();
   params.set("color", BRAND_COLOR);
   params.set("nextEpisode", "true");
   params.set("episodeSelector", "true");
-  if (opts.autoPlay) params.set("autoPlay", "true");
+  params.set("autoPlay", "true");
   return `${EMBED_BASE}/embed/tv/${id}/${season}/${episode}?${params.toString()}`;
 }
 
-// Trailer
-async function loadTrailer(id, type) {
-  try {
-    const data = await fetchJson(`/${type}/${id}/videos`);
-    const trailer = data.results.find(
-      (v) => v.type === "Trailer" && v.site === "YouTube"
-    );
-
-    if (trailer) {
-      trailerFrame.src = `https://www.youtube.com/embed/${trailer.key}`;
-      trailerBox.style.display = "block";
-    } else {
-      trailerFrame.src = "";
-      trailerBox.style.display = "none";
-    }
-  } catch {
-    trailerFrame.src = "";
-    trailerBox.style.display = "none";
-  }
+// PLAYER MODAL
+function openPlayerModal(url) {
+  playerModalBackdrop.classList.add("open");
+  setTimeout(() => {
+    playerFrame.src = url;
+  }, 60);
 }
 
-// Seasons / episodes
+infoClose.onclick = () => {
+  infoModalBackdrop.classList.remove("open");
+};
+
+playerClose.onclick = () => {
+  playerModalBackdrop.classList.remove("open");
+  playerFrame.src = "";
+};
+
+playerModalBackdrop.addEventListener("click", (e) => {
+  if (e.target === playerModalBackdrop) {
+    playerModalBackdrop.classList.remove("open");
+    playerFrame.src = "";
+  }
+});
+
+// SEASONS + EPISODES
 async function loadSeasons(id) {
   const data = await fetchJson(`/tv/${id}`);
-  if (!data.seasons?.length) {
-    seasonBox.style.display = "none";
-    return;
-  }
-
-  seasonBox.style.display = "block";
   seasonSelect.innerHTML = "";
 
   data.seasons.forEach((s) => {
@@ -324,37 +327,23 @@ async function loadEpisodes(id, season) {
     div.textContent = `E${ep.episode_number} — ${ep.name}`;
 
     div.onclick = () => {
-      playerFrame.src = buildTvEmbed(id, season, ep.episode_number, {
-        autoPlay: true,
-      });
-      if (ep.runtime) {
-        modalRuntime.textContent = `Episode runtime: ${ep.runtime} min`;
-      }
+      const url = buildTvEmbed(id, season, ep.episode_number);
+      openPlayerModal(url);
     };
 
     episodeList.appendChild(div);
   });
 }
 
-// Close modal
-function closeModal() {
-  modalBackdrop.classList.remove("open");
-  playerFrame.src = "";
-  trailerFrame.src = "";
-  currentSelected = null;
-}
-
-modalClose.addEventListener("click", closeModal);
-modalBackdrop.addEventListener("click", (e) => {
-  if (e.target === modalBackdrop) closeModal();
-});
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && modalBackdrop.classList.contains("open")) {
-    closeModal();
-  }
+// SEARCH INPUT LISTENER
+let searchTimeout = null;
+searchInput.addEventListener("input", (e) => {
+  const value = e.target.value;
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => searchAll(value), 350);
 });
 
-// Tabs
+// NAV TABS
 document.querySelectorAll(".nav-tab").forEach((btn) => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".nav-tab").forEach((b) => b.classList.remove("active"));
@@ -369,87 +358,11 @@ document.querySelectorAll(".nav-tab").forEach((btn) => {
   });
 });
 
-// Search input
-let searchTimeout = null;
-searchInput.addEventListener("input", (e) => {
-  const value = e.target.value;
-  clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => searchAll(value), 350);
-});
-
-// Continue Watching (Vidking postMessage)
-window.addEventListener("message", (event) => {
-  try {
-    const data = JSON.parse(event.data);
-    if (data?.type === "PLAYER_EVENT") {
-      const d = data.data;
-      const key = `cw:${d.mediaType}:${d.id}`;
-      localStorage.setItem(
-        key,
-        JSON.stringify({
-          id: d.id,
-          mediaType: d.mediaType,
-          progress: d.progress,
-          currentTime: d.currentTime,
-          duration: d.duration,
-          season: d.season,
-          episode: d.episode,
-        })
-      );
-      renderContinueWatching();
-    }
-  } catch {}
-});
-
-async function renderContinueWatching() {
-  const keys = Object.keys(localStorage).filter((k) => k.startsWith("cw:"));
-  if (!keys.length) {
-    continueSection.style.display = "none";
-    return;
-  }
-
-  continueSection.style.display = "block";
-  continueCarousel.innerHTML = "";
-
-  for (const key of keys) {
-    const item = JSON.parse(localStorage.getItem(key));
-    const type = item.mediaType;
-    const id = item.id;
-
-    const details = await fetchJson(`/${type}/${id}`);
-    const title = type === "movie" ? details.title : details.name;
-    const poster = details.poster_path ? POSTER_BASE + details.poster_path : "";
-
-    const card = document.createElement("article");
-    card.className = "card";
-
-    card.innerHTML = `
-      <div class="card-img-wrap">
-        <img class="card-img" src="${poster}" alt="${escapeHtml(title)}" loading="lazy" />
-      </div>
-      <div class="card-body">
-        <div class="card-title">${escapeHtml(title)}</div>
-      </div>
-    `;
-
-    card.onclick = () => openModal(details, type);
-    continueCarousel.appendChild(card);
-  }
-}
-
-function escapeHtml(str = "") {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
 // INIT
 (async function init() {
   try {
-    await Promise.all([loadHero(), loadCarousels()]);
-    renderContinueWatching();
+    await loadHero();       // Random hero
+    await loadCarousels();  // Trending + Top Rated
   } catch (e) {
     console.error(e);
   }
