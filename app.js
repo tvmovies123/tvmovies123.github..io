@@ -2,13 +2,14 @@
 const API_BASE = "https://ancient-lab-55d7.thomasnz.workers.dev/3";
 const IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
 const POSTER_BASE = "https://image.tmdb.org/t/p/w342";
-const EMBED_BASE = "https://www.vidking.net";
-const BRAND_COLOR = "e50914";
+const EMBED_BASE = "https://www.vidking.net/embed"; // NEW PLAYER API
 
 // STATE
 let currentSelected = null;
 let currentType = "home";
 let currentSearchResults = [];
+let continueWatching = [];
+let watchlist = [];
 
 // ELEMENTS
 const heroBg = document.getElementById("heroBg");
@@ -21,6 +22,9 @@ const heroTrailer = document.getElementById("heroTrailer");
 const trendingMoviesEl = document.getElementById("trendingMovies");
 const trendingTvEl = document.getElementById("trendingTv");
 const topRatedEl = document.getElementById("topRated");
+
+const continueWatchingEl = document.getElementById("continueWatching");
+const watchlistEl = document.getElementById("watchlist");
 
 const searchSection = document.getElementById("searchSection");
 const searchGrid = document.getElementById("searchGrid");
@@ -40,6 +44,7 @@ const infoRuntime = document.getElementById("infoRuntime");
 const infoClose = document.getElementById("infoClose");
 const openPlayer = document.getElementById("openPlayer");
 const openTrailer = document.getElementById("openTrailer");
+const addWatchlistBtn = document.getElementById("addWatchlist");
 const seasonBox = document.getElementById("seasonBox");
 const seasonSelect = document.getElementById("seasonSelect");
 const episodeList = document.getElementById("episodeList");
@@ -49,14 +54,50 @@ const playerModalBackdrop = document.getElementById("playerModalBackdrop");
 const playerFrame = document.getElementById("playerFrame");
 const playerClose = document.getElementById("playerClose");
 
-// API helper
+// STORAGE HELPERS
+function loadLocalState() {
+  try {
+    continueWatching = JSON.parse(localStorage.getItem("continueWatching") || "[]");
+    watchlist = JSON.parse(localStorage.getItem("watchlist") || "[]");
+  } catch {
+    continueWatching = [];
+    watchlist = [];
+  }
+}
+
+function saveLocalState() {
+  localStorage.setItem("continueWatching", JSON.stringify(continueWatching));
+  localStorage.setItem("watchlist", JSON.stringify(watchlist));
+}
+
+function addToContinueWatching(entry) {
+  const key = `${entry.type}-${entry.id}-${entry.season || 0}-${entry.episode || 0}`;
+  const existingIndex = continueWatching.findIndex((e) => e.key === key);
+  if (existingIndex !== -1) continueWatching.splice(existingIndex, 1);
+  continueWatching.unshift({ ...entry, key });
+  continueWatching = continueWatching.slice(0, 20);
+  saveLocalState();
+  renderContinueWatching();
+}
+
+function addToWatchlist(entry) {
+  const key = `${entry.type}-${entry.id}`;
+  if (!watchlist.some((e) => e.key === key)) {
+    watchlist.unshift({ ...entry, key });
+    watchlist = watchlist.slice(0, 50);
+    saveLocalState();
+    renderWatchlist();
+  }
+}
+
+// API HELPERS
 async function fetchJson(path) {
   const res = await fetch(API_BASE + path);
   if (!res.ok) throw new Error("API error " + res.status);
   return res.json();
 }
 
-// RANDOM HERO (from many endpoints)
+// HERO
 async function loadHero() {
   const endpoints = [
     "/trending/movie/week",
@@ -70,7 +111,6 @@ async function loadHero() {
 
   const randomEndpoint = endpoints[Math.floor(Math.random() * endpoints.length)];
   const data = await fetchJson(randomEndpoint);
-
   const items = data.results || [];
   if (!items.length) return;
 
@@ -90,11 +130,15 @@ async function loadHero() {
   heroOverview.textContent = item.overview || "";
 
   heroPlay.onclick = () => openInfoModal(item, type);
-  heroTrailer.onclick = () => openInfoModal(item, type);
+
+  heroTrailer.textContent = "Trailer (Coming Soon)";
+  heroTrailer.style.opacity = "0.6";
+  heroTrailer.style.cursor = "not-allowed";
 }
 
-// CAROUSEL RENDER
+// TMDB CAROUSELS
 function renderCarousel(container, items, type) {
+  if (!container) return;
   container.innerHTML = "";
   items.forEach((item) => {
     const card = document.createElement("article");
@@ -116,7 +160,6 @@ function renderCarousel(container, items, type) {
   });
 }
 
-// LOAD CAROUSELS
 async function loadCarousels() {
   const [trendingMovies, trendingTv, topRated] = await Promise.all([
     fetchJson("/trending/movie/week"),
@@ -129,12 +172,82 @@ async function loadCarousels() {
   renderCarousel(topRatedEl, topRated.results, "movie");
 }
 
+// CONTINUE WATCHING + WATCHLIST
+function renderContinueWatching() {
+  continueWatchingEl.innerHTML = "";
+
+  continueWatching.forEach((item) => {
+    const card = document.createElement("article");
+    card.className = "card";
+    const title = item.title || "Untitled";
+    const poster = item.poster || "";
+
+    card.innerHTML = `
+      <div class="card-img-wrap">
+        <img class="card-img" src="${poster}" alt="${title}" loading="lazy" />
+      </div>
+      <div class="card-body">
+        <div class="card-title">${title}</div>
+      </div>
+    `;
+
+    card.onclick = () => {
+      if (item.type === "movie") {
+        openPlayerModal(`${EMBED_BASE}/movie/${item.id}`);
+      } else {
+        openPlayerModal(`${EMBED_BASE}/tv/${item.id}/${item.season}/${item.episode}?nextEpisode=true`);
+      }
+    };
+
+    continueWatchingEl.appendChild(card);
+  });
+}
+
+function renderWatchlist() {
+  watchlistEl.innerHTML = "";
+
+  watchlist.forEach((item) => {
+    const card = document.createElement("article");
+    card.className = "card";
+    const title = item.title || "Untitled";
+    const poster = item.poster || "";
+
+    card.innerHTML = `
+      <div class="card-img-wrap">
+        <img class="card-img" src="${poster}" alt="${title}" loading="lazy" />
+      </div>
+      <div class="card-body">
+        <div class="card-title">${title}</div>
+      </div>
+    `;
+
+    card.onclick = () => {
+      if (item.type === "movie") {
+        openPlayerModal(`${EMBED_BASE}/movie/${item.id}`);
+      } else {
+        openPlayerModal(`${EMBED_BASE}/tv/${item.id}/1/1?nextEpisode=true`);
+      }
+    };
+
+    watchlistEl.appendChild(card);
+  });
+}
+
 // SEARCH
 async function searchAll(query) {
   if (!query.trim()) {
     searchSection.style.display = "none";
+
+    document.querySelectorAll("main > .row").forEach(row => {
+      if (row.id !== "searchSection") row.style.display = "block";
+    });
+
     return;
   }
+
+  document.querySelectorAll("main > .row").forEach(row => {
+    if (row.id !== "searchSection") row.style.display = "none";
+  });
 
   const [movies, tv] = await Promise.all([
     fetchJson(`/search/movie?query=${encodeURIComponent(query)}`),
@@ -195,7 +308,7 @@ function renderSearchResults(query) {
   });
 }
 
-// INFO MODAL (FIRST POPUP)
+// INFO MODAL
 async function openInfoModal(item, type) {
   currentSelected = { ...item, media_type: type };
   const id = item.id;
@@ -242,38 +355,31 @@ async function openInfoModal(item, type) {
 
   infoModalBackdrop.classList.add("open");
 
-  // PLAY BUTTON → VidKing full player
+  const poster = details.poster_path ? POSTER_BASE + details.poster_path : "";
+
   openPlayer.onclick = () => {
-    const url =
-      type === "movie"
-        ? buildMovieEmbed(id)
-        : buildTvEmbed(id, seasonSelect.value || 1, 1);
-
-    openPlayerModal(url);
+    if (type === "movie") {
+      const url = `${EMBED_BASE}/movie/${id}`;
+      addToContinueWatching({ id, type: "movie", title, poster });
+      openPlayerModal(url);
+    } else {
+      const season = seasonSelect.value || 1;
+      const episode = 1;
+      const url = `${EMBED_BASE}/tv/${id}/${season}/${episode}?nextEpisode=true`;
+      addToContinueWatching({ id, type: "tv", season, episode, title, poster });
+      openPlayerModal(url);
+    }
   };
 
-  // TRAILER BUTTON → VidSrc.to trailer only
-  openTrailer.onclick = () => {
-    const url = `https://vidsrc.to/embed/trailer/${id}`;
-    openPlayerModal(url);
+  addWatchlistBtn.textContent = "Add to Watchlist";
+  addWatchlistBtn.onclick = () => {
+    addToWatchlist({ id, type, title, poster });
+    addWatchlistBtn.textContent = "In Watchlist";
   };
-}
 
-// VIDKING EMBEDS
-function buildMovieEmbed(id) {
-  const params = new URLSearchParams();
-  params.set("color", BRAND_COLOR);
-  params.set("autoPlay", "true");
-  return `${EMBED_BASE}/embed/movie/${id}?${params.toString()}`;
-}
-
-function buildTvEmbed(id, season, episode) {
-  const params = new URLSearchParams();
-  params.set("color", BRAND_COLOR);
-  params.set("nextEpisode", "true");
-  params.set("episodeSelector", "true");
-  params.set("autoPlay", "true");
-  return `${EMBED_BASE}/embed/tv/${id}/${season}/${episode}?${params.toString()}`;
+  openTrailer.textContent = "Trailer (Coming Soon)";
+  openTrailer.style.opacity = "0.6";
+  openTrailer.style.cursor = "not-allowed";
 }
 
 // PLAYER MODAL
@@ -327,7 +433,16 @@ async function loadEpisodes(id, season) {
     div.textContent = `E${ep.episode_number} — ${ep.name}`;
 
     div.onclick = () => {
-      const url = buildTvEmbed(id, season, ep.episode_number);
+      const url = `${EMBED_BASE}/tv/${id}/${season}/${ep.episode_number}?nextEpisode=true`;
+      const poster = data.poster_path ? POSTER_BASE + data.poster_path : "";
+      addToContinueWatching({
+        id,
+        type: "tv",
+        season,
+        episode: ep.episode_number,
+        title: ep.name,
+        poster
+      });
       openPlayerModal(url);
     };
 
@@ -352,17 +467,44 @@ document.querySelectorAll(".nav-tab").forEach((btn) => {
 
     if (!searchInput.value.trim()) {
       searchSection.style.display = "none";
+      document.querySelectorAll("main > .row").forEach(row => {
+        if (row.id !== "searchSection") row.style.display = "block";
+      });
     } else {
       searchAll(searchInput.value);
     }
   });
 });
 
+// PLAYER PROGRESS EVENTS
+window.addEventListener("message", function (event) {
+  try {
+    const data = JSON.parse(event.data);
+
+    if (data.type === "PLAYER_EVENT") {
+      const ev = data.data;
+
+      addToContinueWatching({
+        id: ev.id,
+        type: ev.mediaType,
+        season: ev.season,
+        episode: ev.episode,
+        progress: ev.progress,
+        timestamp: ev.currentTime
+      });
+    }
+  } catch (e) {}
+});
+
 // INIT
 (async function init() {
   try {
-    await loadHero();       // Random hero
-    await loadCarousels();  // Trending + Top Rated
+    loadLocalState();
+    renderContinueWatching();
+    renderWatchlist();
+
+    await loadHero();
+    await loadCarousels();
   } catch (e) {
     console.error(e);
   }
