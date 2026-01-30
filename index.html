@@ -2,12 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>123WatchMovies</title>
+  <title>123WATCHMOVIES</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-
 <header>
   <div class="nav">
     <div class="brand">
@@ -16,7 +15,8 @@
     </div>
 
     <div class="nav-tabs">
-      <button class="nav-tab active" data-type="movie">Movies</button>
+      <button class="nav-tab active" data-type="home">Home</button>
+      <button class="nav-tab" data-type="movie">Movies</button>
       <button class="nav-tab" data-type="tv">TV Shows</button>
     </div>
 
@@ -29,16 +29,66 @@
 
 <main>
   <div class="page">
-    <div class="section-header">
-      <div>
-        <div class="section-title" id="sectionTitle">Popular Movies</div>
-        <div class="section-sub">Powered by TMDB · Streamed via 123WatchMovies</div>
-      </div>
-      <div class="section-sub" id="resultCount"></div>
-    </div>
 
-    <div id="grid" class="grid"></div>
-    <div id="emptyState" class="empty-state" style="display:none;">No results found.</div>
+    <!-- HERO -->
+    <section id="hero" class="hero">
+      <div class="hero-bg" id="heroBg"></div>
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <div class="hero-tag">Featured</div>
+        <h1 id="heroTitle" class="hero-title"></h1>
+        <p id="heroMeta" class="hero-meta"></p>
+        <p id="heroOverview" class="hero-overview"></p>
+        <div class="hero-actions">
+          <button id="heroPlay" class="btn btn-primary">▶ Play</button>
+          <button id="heroTrailer" class="btn btn-ghost">🎬 Trailer</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEARCH RESULTS -->
+    <section id="searchSection" class="section" style="display:none;">
+      <div class="section-header">
+        <div>
+          <div class="section-title" id="searchTitle">Search Results</div>
+          <div class="section-sub">Showing matches for your query</div>
+        </div>
+        <div class="section-sub" id="searchCount"></div>
+      </div>
+      <div id="searchGrid" class="grid"></div>
+      <div id="searchEmpty" class="empty-state" style="display:none;">No results found.</div>
+    </section>
+
+    <!-- CONTINUE WATCHING -->
+    <section id="continueSection" class="section" style="display:none;">
+      <div class="section-header">
+        <div class="section-title">Continue Watching</div>
+      </div>
+      <div class="carousel" id="continueCarousel"></div>
+    </section>
+
+    <!-- CAROUSELS -->
+    <section class="section">
+      <div class="section-header">
+        <div class="section-title">Trending Movies</div>
+      </div>
+      <div class="carousel" id="trendingMovies"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-title">Trending TV Shows</div>
+      </div>
+      <div class="carousel" id="trendingTv"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-title">Top Rated</div>
+      </div>
+      <div class="carousel" id="topRated"></div>
+    </section>
+
   </div>
 </main>
 
@@ -55,27 +105,35 @@
     </div>
 
     <div class="modal-body">
-
       <!-- PLAYER -->
       <div class="modal-player">
         <iframe id="playerFrame" allowfullscreen allow="autoplay; encrypted-media"></iframe>
       </div>
 
-      <!-- TRAILER -->
-      <div class="trailer-box">
-        <h3>Trailer</h3>
-        <iframe id="trailerFrame" allowfullscreen></iframe>
+      <!-- ACTIONS -->
+      <div class="modal-actions">
+        <button id="btnPlay" class="btn btn-primary">▶ Play</button>
+        <button id="btnTrailer" class="btn btn-ghost">🎬 Trailer</button>
       </div>
 
-      <!-- TV SEASONS -->
+      <!-- INFO -->
+      <div class="modal-info">
+        <p id="modalRuntime" class="modal-runtime"></p>
+        <p id="modalOverview" class="modal-overview"></p>
+      </div>
+
+      <!-- TV SEASONS / EPISODES -->
       <div id="seasonBox" class="season-box" style="display:none;">
         <h3>Seasons</h3>
         <select id="seasonSelect"></select>
-
         <div id="episodeList" class="episode-list"></div>
       </div>
 
-      <div class="modal-overview" id="modalOverview"></div>
+      <!-- TRAILER -->
+      <div id="trailerBox" class="trailer-box" style="display:none;">
+        <h3>Trailer</h3>
+        <iframe id="trailerFrame" allowfullscreen></iframe>
+      </div>
     </div>
   </div>
 </div>
