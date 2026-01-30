@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>123WatchMovies – Home</title>
+  <title>123WatchMovies – Movies</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -11,8 +11,8 @@
     <header class="site-header">
       <div class="logo">123WatchMovies</div>
       <nav class="nav">
-        <a href="index.html" class="active">Home</a>
-        <a href="movies.html">Movies</a>
+        <a href="index.html">Home</a>
+        <a href="movies.html" class="active">Movies</a>
         <a href="tv.html">TV Shows</a>
         <a href="faq.html">FAQ</a>
         <a href="legal.html">Disclaimer</a>
@@ -20,25 +20,13 @@
     </header>
 
     <main>
-      <section class="hero">
-        <div class="hero-content">
-          <h1>Stream Movies & TV Instantly</h1>
-          <p>Discover trending movies and TV shows powered by TMDB and multiple streaming sources.</p>
-          <div class="hero-actions">
-            <a href="movies.html" class="btn primary">Browse Movies</a>
-            <a href="tv.html" class="btn secondary">Browse TV Shows</a>
-          </div>
+      <section class="section">
+        <h1>Movies</h1>
+        <div class="search-bar">
+          <input id="movieSearchInput" type="text" placeholder="Search movies...">
+          <button id="movieSearchButton" class="btn secondary">Search</button>
         </div>
-      </section>
-
-      <section class="section">
-        <h2>Trending Movies</h2>
-        <div id="trendingMovies" class="card-row"></div>
-      </section>
-
-      <section class="section">
-        <h2>Trending TV Shows</h2>
-        <div id="trendingTv" class="card-row"></div>
+        <div id="moviesGrid" class="card-row"></div>
       </section>
     </main>
 
@@ -57,7 +45,7 @@
 
   <script src="script.js"></script>
   <script>
-    initHomePage();
+    initMoviesPage();
   </script>
 </body>
 </html>

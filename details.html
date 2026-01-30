@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>123WatchMovies – Details</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page">
+    <header class="site-header">
+      <div class="logo">123WatchMovies</div>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="movies.html">Movies</a>
+        <a href="tv.html">TV Shows</a>
+        <a href="faq.html">FAQ</a>
+        <a href="legal.html">Disclaimer</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="details-layout">
+        <div class="details-poster">
+          <img id="detailsPoster" src="" alt="Poster">
+        </div>
+
+        <div class="details-info">
+          <h1 id="detailsTitle">Loading...</h1>
+
+          <div class="meta-row">
+            <span id="detailsYear" class="tag">Year</span>
+            <span id="detailsRuntime" class="tag">Runtime</span>
+            <span id="detailsRating" class="tag">⭐ Rating</span>
+            <span id="detailsType" class="tag">Type</span>
+          </div>
+
+          <p id="detailsOverview" class="overview">
+            Loading overview...
+          </p>
+
+          <div class="actions">
+            <button class="btn primary" id="playButton">Play</button>
+            <button class="btn secondary" id="downloadButton" style="display:none;">Download</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="episodes-section" id="episodesSection" style="display:none;">
+        <h2>Episodes</h2>
+        <div id="episodesGrid" class="episodes-grid"></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>123watchmovies.xyz does not host any media files. All streams are from third‑party providers.</p>
+    </footer>
+  </div>
+
+  <div id="playerModal" class="player-modal">
+    <div class="player-backdrop" id="playerBackdrop"></div>
+    <div class="player-content">
+      <button class="player-close" id="playerClose">&times;</button>
+      <iframe id="playerFrame" src="" allowfullscreen></iframe>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    initDetailsPage();
+  </script>
+</body>
+</html>
