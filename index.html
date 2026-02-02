@@ -9,15 +9,39 @@
 <body>
   <header class="top-nav">
     <div class="logo">123WatchMovies</div>
-    <nav class="nav-tabs-wrap">
+
+    <!-- Desktop tabs -->
+    <nav class="nav-tabs-wrap" aria-label="Browse">
       <button class="nav-tab active" data-type="home">All</button>
       <button class="nav-tab" data-type="movie">Movies</button>
       <button class="nav-tab" data-type="tv">TV Shows</button>
     </nav>
+
     <div class="search-wrap">
       <input id="searchInput" type="text" placeholder="Search movies & TV..." />
     </div>
+
+    <!-- Mobile hamburger -->
+    <button id="menuBtn" class="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
+      <span class="menu-icon"></span>
+    </button>
   </header>
+
+  <!-- Mobile menu drawer -->
+  <div id="mobileMenuBackdrop" class="menu-backdrop" aria-hidden="true"></div>
+
+  <aside id="mobileMenu" class="mobile-menu" aria-hidden="true">
+    <div class="mobile-menu-header">
+      <div class="mobile-menu-title">Browse</div>
+      <button id="menuCloseBtn" class="menu-close" aria-label="Close menu">✕</button>
+    </div>
+
+    <div class="mobile-menu-body">
+      <button class="menu-item active" data-type="home">All</button>
+      <button class="menu-item" data-type="movie">Movies</button>
+      <button class="menu-item" data-type="tv">TV Shows</button>
+    </div>
+  </aside>
 
   <main>
     <!-- HERO -->
@@ -77,7 +101,7 @@
   <!-- INFO MODAL -->
   <div id="infoModalBackdrop" class="modal-backdrop">
     <div class="modal">
-      <button id="infoClose" class="modal-close">✕</button>
+      <button id="infoClose" class="modal-close" aria-label="Close info">✕</button>
       <div class="modal-body">
         <div class="modal-left">
           <img id="infoPoster" class="modal-poster" src="" alt="" />
@@ -108,14 +132,9 @@
   <!-- PLAYER MODAL -->
   <div id="playerModalBackdrop" class="modal-backdrop">
     <div class="modal modal-player">
-      <button id="playerClose" class="modal-close">✕</button>
+      <button id="playerClose" class="modal-close" aria-label="Close player">✕</button>
       <div class="player-frame-wrap">
-        <iframe
-          id="playerFrame"
-          src=""
-          frameborder="0"
-          allowfullscreen
-        ></iframe>
+        <iframe id="playerFrame" src="" frameborder="0" allowfullscreen></iframe>
       </div>
     </div>
   </div>
@@ -123,19 +142,12 @@
   <!-- TRAILER MODAL -->
   <div id="trailerModalBackdrop" class="modal-backdrop">
     <div class="modal modal-player">
-      <button id="trailerClose" class="modal-close">✕</button>
+      <button id="trailerClose" class="modal-close" aria-label="Close trailer">✕</button>
       <div class="player-frame-wrap">
-        <iframe
-          id="trailerFrame"
-          src=""
-          frameborder="0"
-          allowfullscreen
-        ></iframe>
+        <iframe id="trailerFrame" src="" frameborder="0" allowfullscreen></iframe>
       </div>
     </div>
   </div>
-
-  <div id="messageArea" style="display:none;"></div>
 
   <script src="app.js"></script>
 </body>

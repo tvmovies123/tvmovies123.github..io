@@ -1,6 +1,6 @@
 // CONFIG
 const API_BASE = "https://ancient-lab-55d7.thomasnz.workers.dev/3";
-const IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
+const IMAGE_BASE = "https://image.tmdb.org/t/p/original";
 const POSTER_BASE = "https://image.tmdb.org/t/p/w342";
 const EMBED_BASE = "https://www.vidking.net/embed";
 
@@ -10,6 +10,7 @@ let currentType = "home";
 let currentSearchResults = [];
 let continueWatching = [];
 let watchlist = [];
+let heroCurrent = null;
 
 // ELEMENTS
 const heroBg = document.getElementById("heroBg");
@@ -59,6 +60,12 @@ const trailerModalBackdrop = document.getElementById("trailerModalBackdrop");
 const trailerFrame = document.getElementById("trailerFrame");
 const trailerClose = document.getElementById("trailerClose");
 
+// MOBILE MENU
+const menuBtn = document.getElementById("menuBtn");
+const mobileMenu = document.getElementById("mobileMenu");
+const mobileMenuBackdrop = document.getElementById("mobileMenuBackdrop");
+const menuCloseBtn = document.getElementById("menuCloseBtn");
+
 // STORAGE HELPERS
 function loadLocalState() {
   try {
@@ -79,14 +86,13 @@ function addToContinueWatching(entry) {
   const key = `${entry.type}-${entry.id}-${entry.season || 0}-${entry.episode || 0}`;
   const existingIndex = continueWatching.findIndex((e) => e.key === key);
   if (existingIndex !== -1) continueWatching.splice(existingIndex, 1);
-
   continueWatching.unshift({ ...entry, key });
   continueWatching = continueWatching.slice(0, 20);
   saveLocalState();
   renderContinueWatching();
 }
 
-function isInWatchlist(type, id) {
+function isInWatchlist(id, type) {
   const key = `${type}-${id}`;
   return watchlist.some((e) => e.key === key);
 }
@@ -101,7 +107,7 @@ function addToWatchlist(entry) {
   }
 }
 
-function removeFromWatchlist(type, id) {
+function removeFromWatchlist(id, type) {
   const key = `${type}-${id}`;
   watchlist = watchlist.filter((e) => e.key !== key);
   saveLocalState();
@@ -113,6 +119,17 @@ async function fetchJson(path) {
   const res = await fetch(API_BASE + path);
   if (!res.ok) throw new Error("API error " + res.status);
   return res.json();
+}
+
+function shuffleArray(arr) {
+  const a = Array.isArray(arr) ? [...arr] : [];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = a[i];
+    a[i] = a[j];
+    a[j] = tmp;
+  }
+  return a;
 }
 
 // HERO
@@ -134,6 +151,7 @@ async function loadHero() {
 
   const item = items[Math.floor(Math.random() * items.length)];
   const type = item.title ? "movie" : "tv";
+  heroCurrent = { id: item.id, type };
 
   heroBg.style.backgroundImage = item.backdrop_path
     ? `url(${IMAGE_BASE + item.backdrop_path})`
@@ -141,28 +159,28 @@ async function loadHero() {
 
   const title = type === "movie" ? item.title : item.name;
   const year = (type === "movie" ? item.release_date : item.first_air_date)?.slice(0, 4) || "";
-  const rating = item.vote_average?.toFixed(1) || "-";
+  const rating = item.vote_average ? item.vote_average.toFixed(1) : "N/A";
 
   heroTitle.textContent = title;
   heroMeta.textContent = `${year} • ★ ${rating}`;
   heroOverview.textContent = item.overview || "";
 
   heroPlay.onclick = () => openInfoModal(item, type);
-  heroTrailer.onclick = () => openTrailerModalFromTmdb(item.id, type);
+  heroTrailer.onclick = () => openTrailerModal(item.id, type);
 }
 
 // TMDB CAROUSELS
 function renderCarousel(container, items, type) {
   if (!container) return;
   container.innerHTML = "";
-
-  (items || []).forEach((item) => {
-    const card = document.createElement("article");
-    card.className = "card";
-
+  const list = shuffleArray(items || []);
+  list.forEach((item) => {
     const title = type === "movie" ? item.title : item.name;
     const poster = item.poster_path ? POSTER_BASE + item.poster_path : "";
+    if (!poster) return;
 
+    const card = document.createElement("article");
+    card.className = "card";
     card.innerHTML = `
       <div class="card-img-wrap">
         <img class="card-img" src="${poster}" alt="${title}" loading="lazy" />
@@ -171,7 +189,6 @@ function renderCarousel(container, items, type) {
         <div class="card-title">${title}</div>
       </div>
     `;
-
     card.onclick = () => openInfoModal(item, type);
     container.appendChild(card);
   });
@@ -196,7 +213,6 @@ function renderContinueWatching() {
   continueWatching.forEach((item) => {
     const card = document.createElement("article");
     card.className = "card";
-
     const title = item.title || "Untitled";
     const poster = item.poster || "";
 
@@ -211,9 +227,9 @@ function renderContinueWatching() {
 
     card.onclick = () => {
       if (item.type === "movie") {
-        openPlayerModal(`${EMBED_BASE}/movie/${item.id}`);
+        openPlayerModal(`${EMBED_BASE}/movie/${item.id}?autoPlay=true`);
       } else {
-        openPlayerModal(`${EMBED_BASE}/tv/${item.id}/${item.season}/${item.episode}?nextEpisode=true`);
+        openPlayerModal(`${EMBED_BASE}/tv/${item.id}/${item.season || 1}/${item.episode || 1}?autoPlay=true&episodeSelector=true&nextEpisode=true`);
       }
     };
 
@@ -227,12 +243,20 @@ function renderWatchlist() {
   watchlist.forEach((item) => {
     const card = document.createElement("article");
     card.className = "card";
-
     const title = item.title || "Untitled";
     const poster = item.poster || "";
 
+    const removeBtn = document.createElement("button");
+    removeBtn.className = "card-remove";
+    removeBtn.type = "button";
+    removeBtn.setAttribute("aria-label", "Remove from watchlist");
+    removeBtn.textContent = "✕";
+    removeBtn.onclick = (e) => {
+      e.stopPropagation();
+      removeFromWatchlist(item.id, item.type);
+    };
+
     card.innerHTML = `
-      <button class="card-remove" title="Remove">✕</button>
       <div class="card-img-wrap">
         <img class="card-img" src="${poster}" alt="${title}" loading="lazy" />
       </div>
@@ -241,14 +265,15 @@ function renderWatchlist() {
       </div>
     `;
 
-    // Quick remove button
-    const removeBtn = card.querySelector(".card-remove");
-    removeBtn.onclick = (e) => {
-      e.stopPropagation();
-      removeFromWatchlist(item.type, item.id);
-    };
+    card.appendChild(removeBtn);
 
-    card.onclick = () => openInfoModal({ id: item.id }, item.type);
+    card.onclick = () => {
+      if (item.type === "movie") {
+        openPlayerModal(`${EMBED_BASE}/movie/${item.id}?autoPlay=true`);
+      } else {
+        openPlayerModal(`${EMBED_BASE}/tv/${item.id}/1/1?autoPlay=true&episodeSelector=true&nextEpisode=true`);
+      }
+    };
 
     watchlistEl.appendChild(card);
   });
@@ -258,11 +283,9 @@ function renderWatchlist() {
 async function searchAll(query) {
   if (!query.trim()) {
     searchSection.style.display = "none";
-
     document.querySelectorAll("main > .row").forEach((row) => {
       if (row.id !== "searchSection") row.style.display = "block";
     });
-
     return;
   }
 
@@ -276,7 +299,6 @@ async function searchAll(query) {
   ]);
 
   let results = [];
-
   if (currentType === "movie") {
     results = (movies.results || []).map((r) => ({ ...r, media_type: "movie" }));
   } else if (currentType === "tv") {
@@ -311,10 +333,10 @@ function renderSearchResults(query) {
     const type = item.media_type;
     const title = type === "movie" ? item.title : item.name;
     const poster = item.poster_path ? POSTER_BASE + item.poster_path : "";
+    if (!poster) return;
 
     const card = document.createElement("article");
     card.className = "card";
-
     card.innerHTML = `
       <div class="card-img-wrap">
         <img class="card-img" src="${poster}" alt="${title}" loading="lazy" />
@@ -323,66 +345,21 @@ function renderSearchResults(query) {
         <div class="card-title">${title}</div>
       </div>
     `;
-
     card.onclick = () => openInfoModal(item, type);
     searchGrid.appendChild(card);
   });
 }
 
-// TRAILERS (TMDB -> YouTube)
-async function getTrailerKeyFromTmdb(id, type) {
-  const data = await fetchJson(`/${type}/${id}/videos`);
-  const list = data.results || [];
-
-  const youtube = list.filter((v) => v.site === "YouTube" && v.key);
-  if (!youtube.length) return null;
-
-  const trailer =
-    youtube.find((v) => (v.type || "").toLowerCase() === "trailer") ||
-    youtube.find((v) => (v.name || "").toLowerCase().includes("trailer")) ||
-    youtube[0];
-
-  return trailer?.key || null;
-}
-
-async function openTrailerModalFromTmdb(id, type) {
-  try {
-    const key = await getTrailerKeyFromTmdb(id, type);
-    if (!key) {
-      alert("No trailer available.");
-      return;
-    }
-
-    trailerModalBackdrop.classList.add("open");
-    setTimeout(() => {
-      trailerFrame.src = `https://www.youtube.com/embed/${key}?autoplay=1&mute=0&controls=1`;
-    }, 60);
-  } catch (e) {
-    console.error(e);
-    alert("No trailer available.");
-  }
-}
-
-function closeTrailerModal() {
-  trailerModalBackdrop.classList.remove("open");
-  trailerFrame.src = "";
-}
-
-trailerClose.onclick = closeTrailerModal;
-trailerModalBackdrop.addEventListener("click", (e) => {
-  if (e.target === trailerModalBackdrop) closeTrailerModal();
-});
-
 // INFO MODAL
 async function openInfoModal(item, type) {
-  const id = item.id;
   currentSelected = { ...item, media_type: type };
+  const id = item.id;
 
   const details = await fetchJson(`/${type}/${id}`);
 
   const title = type === "movie" ? details.title : details.name;
   const year = (type === "movie" ? details.release_date : details.first_air_date)?.slice(0, 4) || "";
-  const rating = details.vote_average ? details.vote_average.toFixed(1) : "-";
+  const rating = details.vote_average ? details.vote_average.toFixed(1) : "N/A";
 
   infoTitle.textContent = title;
   infoMeta.textContent = `${type === "movie" ? "Movie" : "TV Show"} • ${year}`;
@@ -397,10 +374,11 @@ async function openInfoModal(item, type) {
   }
 
   infoPoster.src = details.poster_path ? POSTER_BASE + details.poster_path : "";
+  infoPoster.alt = title;
 
   infoChips.innerHTML = "";
   const chips = [];
-  if (rating !== "-") chips.push(`★ ${rating} / 10`);
+  if (rating) chips.push(`★ ${rating} / 10`);
   if (details.original_language) chips.push(details.original_language.toUpperCase());
   if (details.vote_count) chips.push(`${details.vote_count} votes`);
 
@@ -424,27 +402,25 @@ async function openInfoModal(item, type) {
 
   openPlayer.onclick = () => {
     if (type === "movie") {
-      const url = `${EMBED_BASE}/movie/${id}`;
+      const url = `${EMBED_BASE}/movie/${id}?autoPlay=true`;
       addToContinueWatching({ id, type: "movie", title, poster });
       openPlayerModal(url);
     } else {
-      const season = seasonSelect.value || 1;
+      const season = Number(seasonSelect.value || 1);
       const episode = 1;
-      const url = `${EMBED_BASE}/tv/${id}/${season}/${episode}?nextEpisode=true`;
+      const url = `${EMBED_BASE}/tv/${id}/${season}/${episode}?autoPlay=true&episodeSelector=true&nextEpisode=true`;
       addToContinueWatching({ id, type: "tv", season, episode, title, poster });
       openPlayerModal(url);
     }
   };
 
-  openTrailer.onclick = () => openTrailerModalFromTmdb(id, type);
+  openTrailer.onclick = () => openTrailerModal(id, type);
 
-  // WATCHLIST TOGGLE
-  const inList = isInWatchlist(type, id);
-  addWatchlistBtn.textContent = inList ? "Remove from Watchlist" : "Add to Watchlist";
-
+  const inWL = isInWatchlist(id, type);
+  addWatchlistBtn.textContent = inWL ? "Remove from Watchlist" : "Add to Watchlist";
   addWatchlistBtn.onclick = () => {
-    if (isInWatchlist(type, id)) {
-      removeFromWatchlist(type, id);
+    if (isInWatchlist(id, type)) {
+      removeFromWatchlist(id, type);
       addWatchlistBtn.textContent = "Add to Watchlist";
     } else {
       addToWatchlist({ id, type, title, poster });
@@ -471,8 +447,51 @@ infoClose.onclick = () => {
 };
 
 playerClose.onclick = closePlayerModal;
+
 playerModalBackdrop.addEventListener("click", (e) => {
   if (e.target === playerModalBackdrop) closePlayerModal();
+});
+
+// TRAILER MODAL
+function openTrailerFrame(url) {
+  trailerModalBackdrop.classList.add("open");
+  setTimeout(() => {
+    trailerFrame.src = url;
+  }, 60);
+}
+
+function closeTrailerModal() {
+  trailerModalBackdrop.classList.remove("open");
+  trailerFrame.src = "";
+}
+
+async function openTrailerModal(id, type) {
+  try {
+    const data = await fetchJson(`/${type}/${id}/videos`);
+    const results = data.results || [];
+
+    const vid =
+      results.find((v) => v.site === "YouTube" && v.type === "Trailer") ||
+      results.find((v) => v.site === "YouTube") ||
+      results[0];
+
+    if (!vid || !vid.key) {
+      alert("No trailer available.");
+      return;
+    }
+
+    const url = `https://www.youtube.com/embed/${vid.key}?autoplay=1&mute=0&controls=1`;
+    openTrailerFrame(url);
+  } catch (e) {
+    console.error(e);
+    alert("No trailer available.");
+  }
+}
+
+trailerClose.onclick = closeTrailerModal;
+
+trailerModalBackdrop.addEventListener("click", (e) => {
+  if (e.target === trailerModalBackdrop) closeTrailerModal();
 });
 
 // SEASONS + EPISODES
@@ -499,21 +518,18 @@ async function loadEpisodes(id, season) {
   (data.episodes || []).forEach((ep) => {
     const div = document.createElement("div");
     div.className = "episode-item";
-    div.textContent = `E${ep.episode_number} ${ep.name}`;
+    div.textContent = `E${ep.episode_number} • ${ep.name}`;
 
     div.onclick = () => {
-      const url = `${EMBED_BASE}/tv/${id}/${season}/${ep.episode_number}?nextEpisode=true`;
-      const poster = data.poster_path ? POSTER_BASE + data.poster_path : "";
-
+      const url = `${EMBED_BASE}/tv/${id}/${season}/${ep.episode_number}?autoPlay=true&episodeSelector=true&nextEpisode=true`;
       addToContinueWatching({
         id,
         type: "tv",
-        season,
+        season: Number(season),
         episode: ep.episode_number,
-        title: ep.name,
-        poster
+        title: `${ep.name}`,
+        poster: ""
       });
-
       openPlayerModal(url);
     };
 
@@ -536,6 +552,11 @@ document.querySelectorAll(".nav-tab").forEach((btn) => {
     btn.classList.add("active");
     currentType = btn.getAttribute("data-type");
 
+    // sync menu items
+    document.querySelectorAll(".menu-item").forEach((m) => {
+      m.classList.toggle("active", m.getAttribute("data-type") === currentType);
+    });
+
     if (!searchInput.value.trim()) {
       searchSection.style.display = "none";
       document.querySelectorAll("main > .row").forEach((row) => {
@@ -547,24 +568,60 @@ document.querySelectorAll(".nav-tab").forEach((btn) => {
   });
 });
 
-// PLAYER PROGRESS EVENTS
-window.addEventListener("message", function (event) {
-  try {
-    const data = JSON.parse(event.data);
+// MOBILE MENU
+function openMenu() {
+  mobileMenu.classList.add("open");
+  mobileMenuBackdrop.classList.add("open");
+  menuBtn.setAttribute("aria-expanded", "true");
+  mobileMenu.setAttribute("aria-hidden", "false");
+  mobileMenuBackdrop.setAttribute("aria-hidden", "false");
+}
 
-    if (data.type === "PLAYER_EVENT") {
-      const ev = data.data;
+function closeMenu() {
+  mobileMenu.classList.remove("open");
+  mobileMenuBackdrop.classList.remove("open");
+  menuBtn.setAttribute("aria-expanded", "false");
+  mobileMenu.setAttribute("aria-hidden", "true");
+  mobileMenuBackdrop.setAttribute("aria-hidden", "true");
+}
 
-      addToContinueWatching({
-        id: ev.id,
-        type: ev.mediaType,
-        season: ev.season,
-        episode: ev.episode,
-        progress: ev.progress,
-        timestamp: ev.currentTime
+if (menuBtn) menuBtn.addEventListener("click", openMenu);
+if (menuCloseBtn) menuCloseBtn.addEventListener("click", closeMenu);
+if (mobileMenuBackdrop) mobileMenuBackdrop.addEventListener("click", closeMenu);
+
+document.querySelectorAll(".menu-item").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".menu-item").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    const type = btn.getAttribute("data-type");
+    document.querySelectorAll(".nav-tab").forEach((t) => {
+      t.classList.toggle("active", t.getAttribute("data-type") === type);
+    });
+
+    currentType = type;
+
+    if (!searchInput.value.trim()) {
+      searchSection.style.display = "none";
+      document.querySelectorAll("main > .row").forEach((row) => {
+        if (row.id !== "searchSection") row.style.display = "block";
       });
+    } else {
+      searchAll(searchInput.value);
     }
-  } catch (e) {}
+
+    closeMenu();
+  });
+});
+
+// Close modals on ESC
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    closePlayerModal();
+    closeTrailerModal();
+    infoModalBackdrop.classList.remove("open");
+    closeMenu();
+  }
 });
 
 // INIT
