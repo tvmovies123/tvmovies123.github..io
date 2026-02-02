@@ -30,7 +30,7 @@
         <p id="heroOverview" class="hero-overview"></p>
         <div class="hero-actions">
           <button id="heroPlay" class="btn btn-primary">Play</button>
-          <button id="heroTrailer" class="btn btn-secondary">Trailer (Coming Soon)</button>
+          <button id="heroTrailer" class="btn btn-secondary">Trailer</button>
         </div>
       </div>
     </section>
@@ -91,7 +91,7 @@
 
           <div class="modal-actions">
             <button id="openPlayer" class="btn btn-primary">Play</button>
-            <button id="openTrailer" class="btn btn-secondary">Trailer (Coming Soon)</button>
+            <button id="openTrailer" class="btn btn-secondary">Trailer</button>
             <button id="addWatchlist" class="btn btn-outline">Add to Watchlist</button>
           </div>
 
@@ -120,7 +120,21 @@
     </div>
   </div>
 
-  <!-- Optional debug area for player messages -->
+  <!-- TRAILER MODAL -->
+  <div id="trailerModalBackdrop" class="modal-backdrop">
+    <div class="modal modal-player">
+      <button id="trailerClose" class="modal-close">✕</button>
+      <div class="player-frame-wrap">
+        <iframe
+          id="trailerFrame"
+          src=""
+          frameborder="0"
+          allowfullscreen
+        ></iframe>
+      </div>
+    </div>
+  </div>
+
   <div id="messageArea" style="display:none;"></div>
 
   <script src="app.js"></script>
